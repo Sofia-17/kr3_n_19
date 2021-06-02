@@ -6,6 +6,8 @@
 #include<vector>
 #include<omp.h>
 #include<ctime>
+#include<time.h>
+#include<chrono>
 #include<random>
 using namespace std;
 class CFabrics;
@@ -96,15 +98,9 @@ protected:
 public:
 	CComplexVector(){}
 	CComplexVector(const int &n){w.resize(n);}
-	CComplexVector(const vector<ComplexNumber> rhs, const int &n){
-		w=rhs; w.resize(n);
-	}
-	CComplexVector(const vector<ComplexNumber> rhs){
-		w=rhs;
-	}
-	CComplexVector(const CComplexVector &rhs){
-		w=rhs.w;
-	}
+	CComplexVector(const vector<ComplexNumber> rhs, const int &n){w=rhs; w.resize(n);}
+	CComplexVector(const vector<ComplexNumber> rhs){w=rhs;}
+	CComplexVector(const CComplexVector &rhs){w=rhs.w;}
 	CComplexVector(CComplexVector &&rhs){
 		w=move(rhs.w);
 	}
