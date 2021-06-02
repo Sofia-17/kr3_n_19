@@ -148,7 +148,7 @@ CComplexVector2 operator-(const CComplexVector &lhs, const CComplexVector &rhs){
 ComplexNumber operator*(const CComplexVector &lhs, const CComplexVector &rhs){
 	ComplexNumber result;
 	if(lhs.Size()>rhs.Size()){
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for(size_t i=0; i<rhs.Size(); i++){
 			ComplexNumber tmp=rhs[i];
 			tmp.Conjugation();
@@ -156,7 +156,7 @@ ComplexNumber operator*(const CComplexVector &lhs, const CComplexVector &rhs){
 		}
 	}
 	else{
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for(size_t i=0; i<lhs.Size(); i++){
 			ComplexNumber tmp=rhs[i];
 			tmp.Conjugation();
