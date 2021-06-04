@@ -6,6 +6,7 @@
 #include<vector>
 #include<omp.h>
 #include<ctime>
+#include<unistd.h>
 #include<time.h>
 #include<chrono>
 #include<random>
@@ -15,13 +16,30 @@ class CFabrics;
 class ComplexNumber{
 	double Re, Im;
 public:
-	ComplexNumber(){Re=0; Im=0;}
-	ComplexNumber(double x){Re=x; Im=0;}
-	ComplexNumber(double Re, double Im){this->Re=Re; this->Im=Im;}
-	double GetRe() const {return Re;}
-	double GetIm() const {return Im;}
-	void SetRe(double Re) {this->Re=Re;}
-	void SetIm(double Im) {this->Im=Im;}
+	ComplexNumber(){
+		Re=0;
+		Im=0;
+	}
+	ComplexNumber(double x){
+		Re=x;
+		Im=0;
+	}
+	ComplexNumber(double Re, double Im){
+		this->Re=Re;
+		this->Im=Im;
+	}
+	double GetRe() const {
+		return Re;
+	}
+	double GetIm() const {
+		return Im;
+	}
+	void SetRe(double Re) {
+		this->Re=Re;
+	}
+	void SetIm(double Im) {
+		this->Im=Im;
+	}
 	ComplexNumber operator+(const ComplexNumber &x) {
 		ComplexNumber result; 
 		result.Re=Re+x.Re; 
@@ -177,7 +195,7 @@ public:
 	CComplexVector2(): CComplexVector(){};
 	CComplexVector2(const int &n): CComplexVector(n){};
 	CComplexVector2(const vector<ComplexNumber> rhs, const int &n): CComplexVector(rhs,n){}
-	CComplexVector2(const CComplexVector2 &rhs): CComplexVector(rhs){}
+	//CComplexVector2(const CComplexVector2 &rhs): CComplexVector(rhs){}
 
 	CComplexVector &operator=(const CComplexVector &rhs){
 		if(this!=&rhs){
