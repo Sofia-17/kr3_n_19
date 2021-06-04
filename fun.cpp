@@ -81,13 +81,49 @@ ComplexNumber operator*(const double &lhs, const ComplexNumber &rhs) {
 }
 
 CComplexVector2 operator+(const CComplexVector &lhs, const CComplexVector &rhs){
-	time_t t1, t2;
-	float Time;
 	ofstream out;
 	out.open("log-check.txt",ios::app);
-	time(&t1);
+	chrono::time_point<chrono::system_clock> start, end;
+	int elapsed_ms;
+  
+	CComplexVector2 result;
+	
+	//////////////////////
+	start = chrono::system_clock::now();    
 	if(lhs.Size()>rhs.Size()){
-		CComplexVector2 result(lhs.Size());
+		result.resize(lhs.Size());
+		for(size_t i=0; i<rhs.Size(); i++){
+			ComplexNumber tmp=lhs[i]+rhs[i];
+			result.Set(tmp,i);	
+		}
+		for(size_t i=rhs.Size(); i<lhs.Size(); i++)
+			result.Set(lhs[i],i);
+	}
+	else{
+		result.resize(rhs.Size());
+		for(size_t i=0; i<lhs.Size(); i++){
+			ComplexNumber tmp=lhs[i]+rhs[i];
+			result.Set(tmp,i);	
+		}
+		for(size_t i=lhs.Size(); i<rhs.Size(); i++)
+			result.Set(rhs[i],i);
+	}
+	
+	end = chrono::system_clock::now();
+	elapsed_ms = static_cast<int>(chrono::duration_cast<chrono::milliseconds>(end - start).count());
+	cout << "[SUM]: NON-PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+	out << "[SUM]: NON-PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+	/////////////////////холостой ход omp parallel для создания потоков
+	/*long Cores = 0;
+	#pragma omp parallel
+	{
+ 	 #pragma omp atomic
+		++Cores;
+	}*/
+        /////////////////////////
+        start = chrono::system_clock::now();  
+	if(lhs.Size()>rhs.Size()){
+		result.resize(lhs.Size());
 		#pragma omp parallel for
 		for(size_t i=0; i<rhs.Size(); i++){
 			ComplexNumber tmp=lhs[i]+rhs[i];
@@ -96,10 +132,9 @@ CComplexVector2 operator+(const CComplexVector &lhs, const CComplexVector &rhs){
 		#pragma omp parallel for
 		for(size_t i=rhs.Size(); i<lhs.Size(); i++)
 			result.Set(lhs[i],i);
-		return result;
 	}
 	else{
-		CComplexVector2 result(rhs.Size());
+		result.resize(rhs.Size());
 		#pragma omp parallel for
 		for(size_t i=0; i<lhs.Size(); i++){
 			ComplexNumber tmp=lhs[i]+rhs[i];
@@ -108,13 +143,16 @@ CComplexVector2 operator+(const CComplexVector &lhs, const CComplexVector &rhs){
 		#pragma omp parallel for
 		for(size_t i=lhs.Size(); i<rhs.Size(); i++)
 			result.Set(rhs[i],i);
-		return result;
 	}
-	time(&t2);
-	Time=static_cast<float>(t2-t1);
-	//Time=Time;
-	out << "TIME for operator+ : "<<Time<<"sec"<<endl;
+	
+	end = chrono::system_clock::now();
+	elapsed_ms = static_cast<int>(chrono::duration_cast<chrono::milliseconds>(end - start).count());
+	cout << "[SUM]: PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+	out << "[SUM]: PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+	//////////////////////////
+		
 	out.close();
+	return result;
 }
 CComplexVector2 operator-(const CComplexVector &lhs, const CComplexVector &rhs){
 	if(lhs.Size()>rhs.Size()){
@@ -146,8 +184,49 @@ CComplexVector2 operator-(const CComplexVector &lhs, const CComplexVector &rhs){
 }
 
 ComplexNumber operator*(const CComplexVector &lhs, const CComplexVector &rhs){
-	ComplexNumber result;
-	if(lhs.Size()>rhs.Size()){
+	size_t N = (lhs.Size()>rhs.Size()) ? lhs.Size() : rhs.Size();
+	ComplexNumber res;
+	int chunk = 1;
+	ComplexNumber tmp;
+	ofstream out;
+	out.open("log-check.txt",ios::app);
+	chrono::time_point<chrono::system_clock> start, end;
+	int elapsed_ms;
+	start = chrono::system_clock::now();
+ 	{
+		for (size_t i=0; i<N; i++) {
+			tmp = lhs[i] * rhs[i];
+			if (i == 10)  {          // !!!
+				usleep(1000);
+			}
+			res = res + tmp;
+		}
+	}
+	end = chrono::system_clock::now();
+	elapsed_ms = static_cast<int>(chrono::duration_cast<chrono::milliseconds>(end - start).count());
+	cout << "[MULTIPLY]: NON-PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+	out << "[MULTIPLY]: NON-PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+
+	
+	start = chrono::system_clock::now();
+	#pragma omp parallel shared(res) private(tmp)
+ 	{
+		#pragma omp for schedule(dynamic, chunk) //reduction(+:res) nowait
+		for (size_t i=0; i<N; i++) {
+			tmp = lhs[i] * rhs[i];
+			if (i == 10)  {          // !!!
+				usleep(1000);
+			}
+			res = res + tmp;
+		}
+	}
+	end = chrono::system_clock::now();
+	elapsed_ms = static_cast<int>(chrono::duration_cast<chrono::milliseconds>(end - start).count());
+	cout << "[MULTIPLY]: PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+	out << "[MULTIPLY]: PARALLEL FOR: TIME = "<<elapsed_ms<<" millisec"<<endl;
+	
+	
+	/*if(lhs.Size()>rhs.Size()){
 		//#pragma omp parallel for
 		for(size_t i=0; i<rhs.Size(); i++){
 			ComplexNumber tmp=rhs[i];
@@ -162,8 +241,8 @@ ComplexNumber operator*(const CComplexVector &lhs, const CComplexVector &rhs){
 			tmp.Conjugation();
 			result=result+lhs[i]*tmp;
 		}
-	}
-	return result;
+	}*/
+	return res;
 }
 
 
